@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Story Generator (Frontend)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for aesthetic font and centered container */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
+
+    <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-xl shadow-2xl border border-gray-100">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            AI Story Generator ✨
+        </h1>
+        <p class="text-sm text-center text-gray-500 mb-6">
+            Frontend UI communicates with the **Python Backend** at `/generate_story`.
+        </p>
+
+        <!-- Story Generation Form (FRONTEND UI) -->
+        <form id="storyForm" class="space-y-4">
+            <label for="promptInput" class="block text-sm font-medium text-gray-700">
+                Enter your story idea:
+            </label>
+            <textarea
+                id="promptInput"
+                name="prompt"
+                rows="4"
+                placeholder="Describe the setting, main character, or conflict (e.g., A lonely robot exploring a forgotten lunar base)."
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 shadow-sm"
+                required
+            ></textarea>
+
+            <button
+                type="submit"
+                id="generateButton"
+                class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-200 ease-in-out disabled:opacity-50"
+            >
+                Generate Story
+            </button>
+        </form>
+
+        <!-- Result Display Area (FRONTEND UI) -->
+        <div id="storyOutput" class="mt-8">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        // --- Element References ---
+        const storyForm = document.getElementById('storyForm');
+        const promptInput = document.getElementById('promptInput');
+        const generateButton = document.getElementById('generateButton');
+        const storyOutput = document.getElementById('storyOutput');
+
+        // --- CONSTANTS ---
+        const BACKEND_ENDPOINT = '/generate_story';
+
+
+        /**
+         * Renders the output, handling loading, errors, and success states for the user.
+         */
+        const renderOutput = (content, isLoading = false, isError = false) => {
+            let innerHTML = '';
+
+            if (isLoading) {
+                innerHTML = `
+                    <div class="flex items-center justify-center p-4 bg-gray-50 rounded-lg text-indigo-600">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p class="font-medium">Requesting story from backend...</p>
+                    </div>
+                `;
+                generateButton.disabled = true;
+                generateButton.textContent = "Generating...";
+            } else {
+                generateButton.disabled = false;
+                generateButton.textContent = "Generate Story";
+
+                if (isError) {
+                    innerHTML = `
+                        <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                            <h3 class="font-bold text-lg mb-1">Error Generating Story</h3>
+                            <p class="whitespace-pre-wrap">${content}</p>
+                        </div>
+                    `;
+                } else {
+                    innerHTML = `
+                        <div class="p-6 bg-white border border-indigo-200 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Generated Story:</h3>
+                            <p class="text-gray-700 whitespace-pre-wrap leading-relaxed">${content}</p>
+                        </div>
+                    `;
+                }
+            }
+            storyOutput.innerHTML = innerHTML;
+        };
+
+
+        /**
+         * Handles the form submission (the main entry point for the frontend).
+         * Calls the local backend endpoint /generate_story.
+         */
+        storyForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userPrompt = promptInput.value.trim();
+            if (!userPrompt) return;
+
+            renderOutput('', true); // Show loading state
+
+            try {
+                const response = await fetch(BACKEND_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userPrompt })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Success: Backend returned the story
+                    renderOutput(result.story, false, false);
+                } else {
+                    // Error: Backend returned an error message
+                    const errorMessage = result.error || 'Unknown error from backend.';
+                    renderOutput(`Backend Error: ${errorMessage}`, false, true);
+                }
+
+            } catch (error) {
+                console.error("Frontend Fetch Failed:", error);
+                // Display network failure error
+                renderOutput(`Network connection failed. Could not reach the backend server.`, false, true);
+            }
+        });
+
+        // Initialize with a welcome message
+        document.addEventListener('DOMContentLoaded', () => {
+            storyOutput.innerHTML = `
+                <div class="p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                    <p class="text-blue-700">Enter a prompt and click "Generate Story". The request will be securely handled by the Python backend.</p>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

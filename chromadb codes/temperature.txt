@@ -1,0 +1,6 @@
+Tamil Nadu: 29.6°C
+Kerala: 29.6°C
+Karnataka: 25.4°C
+Maharashtra: 26.4°C
+Gujarat: 28.6°C
+Delhi: 23.4°C

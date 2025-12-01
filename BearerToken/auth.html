@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth Server - Create Token</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    label { display: block; margin-top: 10px; }
+    input { padding: 6px; width: 220px; }
+    button { margin-top: 12px; padding: 6px 12px; }
+    #result { margin-top: 16px; padding: 10px; border: 1px solid #ccc; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <h2>Auth Server - Create Bearer Token</h2>
+
+  <label>Username:</label>
+  <input type="text" id="username" value="admin">
+
+  <label>Password:</label>
+  <input type="password" id="password" value="secret">
+
+  <br>
+  <button onclick="createToken()">Create Token</button>
+
+  <div id="result">
+    <strong>Response:</strong>
+    <pre id="responseText">(token will appear here)</pre>
+  </div>
+
+  <script>
+    async function createToken() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const responseElement = document.getElementById("responseText");
+      responseElement.textContent = "Calling /create-token ...";
+
+      try {
+        const res = await fetch("/create-token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          responseElement.textContent = JSON.stringify(data, null, 2);
+        } else {
+          responseElement.textContent = "Error: " + JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        responseElement.textContent = "Network error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>

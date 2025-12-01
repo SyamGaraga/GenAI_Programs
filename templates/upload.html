@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Upload Document or Text</h2>
+<hr>
+
+{% if collections %}
+<form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="collection" class="form-label">Select Collection</label>
+        <select class="form-select" id="collection" name="collection" required>
+            <option value="" selected disabled>Choose...</option>
+            {% for col in collections %}
+            <option value="{{ col }}">{{ col }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="input_type" class="form-label">Input Type</label>
+        <select class="form-select" id="input_type" name="input_type" onchange="toggleInputFields()" required>
+            <option value="text" selected>Raw Text</option>
+            <option value="file">File Upload (.txt, .pdf, .docx)</option>
+        </select>
+    </div>
+
+    <div id="text-input-field" class="mb-3">
+        <label for="text" class="form-label">Text to Embed</label>
+        <textarea class="form-control" id="text" name="text" rows="5"></textarea>
+    </div>
+
+    <div id="file-input-field" class="mb-3" style="display:none;">
+        <label for="file" class="form-label">Select File</label>
+        <input class="form-control" type="file" id="file" name="file" accept=".txt,.pdf,.docx">
+    </div>
+
+    <div class="mb-3">
+        <label for="metadata" class="form-label">Metadata (Optional JSON)</label>
+        <textarea class="form-control" id="metadata" name="metadata" rows="3" placeholder='{"source": "my_document", "author": "me"}'></textarea>
+        <small class="form-text text-muted">Must be valid JSON object string.</small>
+    </div>
+
+    <button type="submit" class="btn btn-success">Embed & Upload</button>
+</form>
+{% else %}
+<div class="alert alert-warning">Please <a href="{{ url_for('collections') }}">create a collection</a> before uploading documents.</div>
+{% endif %}
+
+<script>
+    function toggleInputFields() {
+        const type = document.getElementById('input_type').value;
+        const textDiv = document.getElementById('text-input-field');
+        const fileDiv = document.getElementById('file-input-field');
+        
+        if (type === 'text') {
+            textDiv.style.display = 'block';
+            fileDiv.style.display = 'none';
+        } else if (type === 'file') {
+            textDiv.style.display = 'none';
+            fileDiv.style.display = 'block';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', toggleInputFields);
+</script>
+{% endblock %}

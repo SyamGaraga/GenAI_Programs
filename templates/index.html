@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-4 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">VectorDB Dashboard</h1>
+        <p class="col-md-8 fs-4">A simple Flask interface for managing and querying documents in ChromaDB.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-header">Total Collections</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ stats.total_collections }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-header">Total Documents (Chunks)</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ stats.total_documents }}</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-header">Recent Collections</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush bg-info">
+                    {% for col in stats.collections %}
+                    <li class="list-group-item bg-info text-white d-flex justify-content-between align-items-center">
+                        {{ col.name }}
+                        <span class="badge bg-light text-primary rounded-pill">{{ col.count }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

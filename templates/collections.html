@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manage Collections</h2>
+<hr>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Create New Collection</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('collections') }}">
+                    <div class="mb-3">
+                        <label for="collectionName" class="form-label">Collection Name</label>
+                        <input type="text" class="form-control" id="collectionName" name="collectionName" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Existing Collections</div>
+            <div class="card-body">
+                {% if collections %}
+                <ul class="list-group">
+                    {% for col in collections %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ col }}
+                        <span>
+                            <a href="{{ url_for('export_collection', col_name=col) }}" class="btn btn-sm btn-outline-info me-2">Export JSON</a>
+                            <a href="{{ url_for('delete_collection', col_name=col) }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete collection {{ col }}?')">Delete</a>
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No collections found. Create one above!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

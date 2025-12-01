@@ -1,0 +1,7 @@
+1:apple
+2:orange
+3:tiger
+4:rose
+5:car
+6:banana
+7:sports 

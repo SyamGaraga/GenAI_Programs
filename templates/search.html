@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Search and Query Documents</h2>
+<hr>
+
+<form method="POST" action="{{ url_for('search') }}">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="collection" class="form-label">Select Collection</label>
+            <select class="form-select" id="collection" name="collection" required>
+                <option value="" {% if not selected_col %}selected{% endif %} disabled>Choose...</option>
+                {% for col in collections %}
+                <option value="{{ col }}" {% if selected_col == col %}selected{% endif %}>{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-5">
+            <label for="query" class="form-label">Query Text</label>
+            <input type="text" class="form-control" id="query" name="query" required>
+        </div>
+        <div class="col-md-3">
+            <label for="topk" class="form-label">Top K Results</label>
+            <input type="number" class="form-control" id="topk" name="topk" value="5" min="1" required>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            <label class="form-label">Search Mode</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" id="modeVector" value="vector" checked>
+                    <label class="form-check-label" for="modeVector">Vector Search</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" id="modeKeyword" value="keyword">
+                    <label class="form-check-label" for="modeKeyword">Keyword Filter</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="mode" id="modeHybrid" value="hybrid">
+                    <label class="form-check-label" for="modeHybrid">Hybrid Filter</label>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <label for="filter" class="form-label">Metadata Filter (Optional Chroma `where` JSON)</label>
+            <input type="text" class="form-control" id="filter" name="filter" placeholder='{"source": {"$eq": "my_document"}}'>
+            <small class="form-text text-muted">Must be a valid ChromaDB query JSON object.</small>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary mt-3">Search</button>
+</form>
+
+<h3 class="mt-5">Search Results</h3>
+<hr>
+
+{% if results is not none %} <!-- FIX: Changed 'None' to lowercase 'none' -->
+    <p class="text-muted">Found {{ results|length }} results in **{{ selected_col }}**.</p>
+    {% for res in results %}
+    <div class="card mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <strong>Score: {{ "%.4f"|format(res.score) }}</strong> 
+            <a href="{{ url_for('delete_document', col_name=selected_col, doc_id=res.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this document?')">Delete</a>
+        </div>
+        <div class="card-body">
+            <p class="card-text">
+                <small class="text-muted">Metadata: {{ res.metadata }}</small>
+            </p>
+            <p class="card-text">{{ res.text | truncate(300, True, '...') }}</p>
+        </div>
+        <div class="card-footer text-muted">
+            ID: {{ res.id }}
+        </div>
+    </div>
+    {% endfor %}
+{% elif request.method == "POST" %}
+    <div class="alert alert-warning">No results found for your query or filter.</div>
+{% else %}
+    <div class="alert alert-info">Enter a query and select a collection to begin your search.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Document Embedding Visualization (PCA)</h2>
+<hr>
+
+<form method="POST" action="{{ url_for('visualize') }}" class="mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label for="collection" class="form-label">Select Collection to Visualize</label>
+            <select class="form-select" id="collection" name="collection" required>
+                <option value="" {% if not selected_col %}selected{% endif %} disabled>Choose...</option>
+                {% for col in collections %}
+                <option value="{{ col }}" {% if selected_col == col %}selected{% endif %}>{{ col }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Generate PCA Chart</button>
+        </div>
+    </div>
+</form>
+
+{% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endif %}
+
+{% if chart_data %}
+    <p class="text-muted">Showing 2D PCA reduction of **{{ chart_data|length }}** document embeddings from **{{ selected_col }}**.</p>
+    <div class="card">
+        <div class="card-body">
+            <canvas id="pcaChart"></canvas>
+        </div>
+    </div>
+{% elif selected_col and not chart_data and not error %}
+    <div class="alert alert-info">Collection **{{ selected_col }}** selected. Need at least 2 documents to run PCA.</div>
+{% else %}
+    <div class="alert alert-info">Select a collection and click "Generate PCA Chart" to see the vector space visualization.</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+{% if chart_data %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script>
+    const chartData = {{ chart_data | tojson }};
+
+    const dataPoints = chartData.map(item => ({
+        x: item.x,
+        y: item.y,
+        id: item.id,
+        meta: JSON.stringify(item.meta),
+        snippet: item.snippet
+    }));
+
+    const ctx = document.getElementById('pcaChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Document Embeddings (2D PCA)',
+                data: dataPoints,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            aspectRatio: 2,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Principal Component 1'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Principal Component 2'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return `Document ID: ${context.raw.id}`;
+                        },
+                        label: function(context) {
+                            const item = context.raw;
+                            return [
+                                `Snippet: ${item.snippet}`,
+                                `Metadata: ${item.meta}`,
+                                `X: ${item.x.toFixed(4)}`,
+                                `Y: ${item.y.toFixed(4)}`
+                            ];
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: `Vector Space Visualization for {{ selected_col }}`
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
